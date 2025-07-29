@@ -1,334 +1,583 @@
 <!DOCTYPE html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>You Have Not Been To Samos!</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      padding: 1rem;
-      background-color: #f5f5f5;
-    }
-
-    .title-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .title {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .day-bar {
-      overflow-x: auto;
-      display: flex;
-      gap: 8px;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .day-btn {
-      background-color: #ccc;
-      padding: 6px 12px;
-      border-radius: 12px;
-      white-space: nowrap;
-      cursor: pointer;
-    }
-
-    .selected-day {
-      background-color: #00aced;
-      color: white;
-    }
-
-    .spot-item {
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      background-color: #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .spot-name {
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .icon-row {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 8px;
-    }
-
-    .icon-button {
-      padding: 10px;
-      border-radius: 8px;
-      background-color: #eee;
-      font-size: 24px;
-      cursor: pointer;
-    }
-
-    .icon-button.selected {
-      background-color: #a0e1ff;
-    }
-
-    .input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #aaa;
-      margin-bottom: 8px;
-    }
-
-    .add-button {
-      background-color: #007AFF;
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.6);
-      justify-content: center;
-      align-items: center;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 16px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 400px;
-    }
-
-    .spot-actions {
-      text-align: center;
-      margin-top: 4px;
-    }
-
-    .spot-actions button {
-      background: none;
-      border: none;
-      color: blue;
-      margin: 4px;
-      cursor: pointer;
-    }
-
-    .spot-actions .delete {
-      color: red;
-    }
-
-    .time-inputs {
-      margin-top: 4px;
-    }
-
-    .dark-mode {
-      background-color: #111;
-      color: #fff;
-    }
-
-    .dark-mode input {
-      background-color: #222;
-      color: #fff;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>You Have Not Been To Samos!</title>
+<style>
+  body {
+    font-family: sans-serif;
+    padding: 20px;
+    background-color: #f9f9f9;
+    color: #111;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.dark {
+    background-color: #111;
+    color: #eee;
+  }
+  h1 {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 480px;
+    margin: 0 auto 12px;
+  }
+  .day-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 480px;
+    margin: 0 auto 12px;
+  }
+  .day-buttons button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ccc;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+  }
+  .day-buttons button.selected {
+    background-color: #00aced;
+    color: white;
+    font-weight: bold;
+  }
+  .day-buttons button:hover {
+    background-color: #999;
+    color: white;
+  }
+  .spots {
+    max-width: 480px;
+    margin: 0 auto 20px;
+  }
+  .spot {
+    background-color: #eee;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+  }
+  body.dark .spot {
+    background-color: #222;
+  }
+  .spot-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .spot-emoji {
+    font-size: 20px;
+  }
+  .spot-name {
+    font-size: 16px;
+  }
+  .spot-time {
+    font-size: 14px;
+    margin-left: 12px;
+    font-style: italic;
+    opacity: 0.7;
+  }
+  .spot-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    margin-left: 8px;
+    user-select: none;
+    color: #555;
+    transition: color 0.2s;
+  }
+  .spot-actions button:hover {
+    color: #007AFF;
+  }
+  .controls {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .controls select, .controls input {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    box-sizing: border-box;
+    color: #111;
+  }
+  body.dark .controls select,
+  body.dark .controls input {
+    background-color: #222;
+    border: 1px solid #555;
+    color: #eee;
+  }
+  .controls button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007AFF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    user-select: none;
+    transition: background-color 0.2s;
+  }
+  .controls button:hover {
+    background-color: #005bb5;
+  }
+  .modal-overlay {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-overlay.active {
+    display: flex;
+  }
+  .modal {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-sizing: border-box;
+  }
+  body.dark .modal {
+    background-color: #222;
+    color: #eee;
+  }
+  .modal input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+  body.dark .modal input {
+    background-color: #333;
+    border: 1px solid #555;
+    color: #eee;
+  }
+  .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  .modal-buttons button {
+    cursor: pointer;
+    font-size: 16px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    user-select: none;
+  }
+  .modal-buttons button.cancel {
+    background-color: #aaa;
+    color: white;
+  }
+  .modal-buttons button.confirm {
+    background-color: #007AFF;
+    color: white;
+  }
+  .modal-buttons button.cancel:hover {
+    background-color: #888;
+  }
+  .modal-buttons button.confirm:hover {
+    background-color: #005bb5;
+  }
+</style>
 </head>
 <body>
 
-  <div class="title-bar">
-    <div class="title">You Have Not Been To Samos!</div>
-    <button id="darkModeToggle">🌙</button>
+  <div class="top-bar">
+    <h1>You Have Not Been To Samos!</h1>
+    <button id="darkModeToggle" title="Toggle dark mode">🌙</button>
   </div>
 
-  <div class="day-bar" id="dayBar"></div>
-  <div id="spotsList"></div>
+  <div class="day-buttons" id="dayButtons"></div>
 
-  <div class="add-container">
-    <div class="icon-row" id="iconSelector">
-      <div class="icon-button" data-type="beach">🏖️</div>
-      <div class="icon-button" data-type="food">🍽️</div>
-      <div class="icon-button" data-type="walk">🚶</div>
-    </div>
-    <input class="input" id="spotNameInput" placeholder="Όνομα δραστηριότητας" />
-    <div class="add-button" id="addSpotButton">Προσθήκη</div>
+  <div class="spots" id="spotList"></div>
+
+  <div class="controls">
+    <select id="typeSelect" aria-label="Επέλεξε τύπο">
+      <option value="">Επέλεξε τύπο</option>
+      <option value="beach">🏖️ Παραλία</option>
+      <option value="food">🍽️ Φαγητό</option>
+      <option value="walk">🚶 Βόλτα</option>
+    </select>
+    <input type="text" id="spotInput" placeholder="Όνομα δραστηριότητας" aria-label="Όνομα δραστηριότητας" />
+    <button id="addSpotBtn">Προσθήκη</button>
   </div>
 
-  <!-- Rename Modal -->
-  <div class="modal" id="renameModal">
-    <div class="modal-content">
-      <input class="input" id="renameInput" placeholder="Νέο όνομα" />
-      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-        <button onclick="closeRenameModal()">Ακύρωση</button>
-        <button onclick="confirmRename()">OK</button>
+  <!-- Modal για μετονομασία -->
+  <div class="modal-overlay" id="renameModal">
+    <div class="modal">
+      <h3>Μετονομασία δραστηριότητας</h3>
+      <input type="text" id="renameInput" aria-label="Νέο όνομα δραστηριότητας" />
+      <div class="modal-buttons">
+        <button class="cancel" id="renameCancelBtn">Ακύρωση</button>
+        <button class="confirm" id="renameConfirmBtn">OK</button>
       </div>
     </div>
   </div>
 
-  <!-- Add Day Modal -->
-  <div class="modal" id="addDayModal">
-    <div class="modal-content">
-      <input class="input" id="newDayInput" placeholder="Όνομα ημέρας" />
-      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
-        <button onclick="closeAddDayModal()">Ακύρωση</button>
-        <button onclick="confirmAddDay()">OK</button>
+  <!-- Modal για προσθήκη ημέρας -->
+  <div class="modal-overlay" id="addDayModal">
+    <div class="modal">
+      <h3>Προσθήκη νέας ημέρας</h3>
+      <input type="text" id="newDayNameInput" placeholder="Όνομα ημέρας" aria-label="Όνομα ημέρας" />
+      <div class="modal-buttons">
+        <button class="cancel" id="addDayCancelBtn">Ακύρωση</button>
+        <button class="confirm" id="addDayConfirmBtn">OK</button>
       </div>
     </div>
   </div>
 
   <script>
-    let spots = JSON.parse(localStorage.getItem('spots')) || {
-      'Day 1': [],
-      'Day 2': [],
-      'Day 3': [],
-      'Day 4': [],
-      'Day 5': []
-    };
-
-    let selectedDay = Object.keys(spots)[0];
-    let selectedType = null;
-    let showTimeInputIndex = null;
-    let currentRenameCallback = null;
-
-    const dayBar = document.getElementById('dayBar');
-    const spotsList = document.getElementById('spotsList');
-    const iconButtons = document.querySelectorAll('.icon-button');
-    const spotNameInput = document.getElementById('spotNameInput');
-    const addSpotButton = document.getElementById('addSpotButton');
-    const renameModal = document.getElementById('renameModal');
-    const renameInput = document.getElementById('renameInput');
-    const addDayModal = document.getElementById('addDayModal');
-    const newDayInput = document.getElementById('newDayInput');
-    const darkToggle = document.getElementById('darkModeToggle');
-    let darkMode = localStorage.getItem('darkMode') === 'true';
-
-    function saveData() {
+    // Αρχικοποίηση δεδομένων
+    let spots;
+    try {
+      spots = JSON.parse(localStorage.getItem('spots'));
+      if (!spots || typeof spots !== 'object' || Object.keys(spots).length === 0) throw 'invalid';
+    } catch {
+      spots = {
+        'Day 1': [],
+        'Day 2': [],
+        'Day 3': [],
+        'Day 4': [],
+        'Day 5': []
+      };
       localStorage.setItem('spots', JSON.stringify(spots));
     }
 
-    function renderDays() {
-      dayBar.innerHTML = '';
-      for (const day in spots) {
-        const btn = document.createElement('div');
-        btn.className = 'day-btn' + (day === selectedDay ? ' selected-day' : '');
-        btn.textContent = day;
-        btn.onclick = () => {
-          selectedDay = day;
-          renderDays();
-          renderSpots();
-        };
-        btn.oncontextmenu = (e) => {
-          e.preventDefault();
-          openRenameModal(day, (newName) => {
-            if (!newName || newName === day || spots[newName]) return;
-            spots[newName] = spots[day];
-            delete spots[day];
-            selectedDay = newName;
-            saveData();
-            renderDays();
-            renderSpots();
-          });
-        };
-        dayBar.appendChild(btn);
-      }
+    let selectedDay = Object.keys(spots)[0];
+    let editingSpotIndex = null;
+    let timeEditIndex = null;
+    let darkMode = localStorage.getItem('darkMode') === 'true';
 
-      const addBtn = document.createElement('div');
-      addBtn.className = 'day-btn';
-      addBtn.style.backgroundColor = '#666';
-      addBtn.textContent = '+ Ημέρα';
-      addBtn.onclick = () => {
-        addDayModal.classList.add('active');
-        newDayInput.value = '';
-      };
-      dayBar.appendChild(addBtn);
+    const dayButtonsDiv = document.getElementById('dayButtons');
+    const spotListDiv = document.getElementById('spotList');
+    const typeSelect = document.getElementById('typeSelect');
+    const spotInput = document.getElementById('spotInput');
+    const addSpotBtn = document.getElementById('addSpotBtn');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    // Modal elements
+    const renameModal = document.getElementById('renameModal');
+    const renameInput = document.getElementById('renameInput');
+    const renameCancelBtn = document.getElementById('renameCancelBtn');
+    const renameConfirmBtn = document.getElementById('renameConfirmBtn');
+
+    const addDayModal = document.getElementById('addDayModal');
+    const newDayNameInput = document.getElementById('newDayNameInput');
+    const addDayCancelBtn = document.getElementById('addDayCancelBtn');
+    const addDayConfirmBtn = document.getElementById('addDayConfirmBtn');
+
+    // Switch dark mode UI
+    function updateDarkModeUI() {
+      if (darkMode) {
+        document.body.classList.add('dark');
+        darkModeToggle.textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark');
+        darkModeToggle.textContent = '🌙';
+      }
+    }
+    updateDarkModeUI();
+
+    darkModeToggle.onclick = () => {
+      darkMode = !darkMode;
+      localStorage.setItem('darkMode', darkMode);
+      updateDarkModeUI();
+    };
+
+    function save() {
+      localStorage.setItem('spots', JSON.stringify(spots));
     }
 
-    function renderSpots() {
-      spotsList.innerHTML = '';
-      (spots[selectedDay] || []).forEach((spot, index) => {
-        const item = document.createElement('div');
-        item.className = 'spot-item';
-        item.style.backgroundColor = spot.type === 'beach' ? '#d0f0ff' :
-                                     spot.type === 'food' ? '#ffe4b5' :
-                                     spot.type === 'walk' ? '#e6ffe6' : '#eee';
+    // Δημιουργία κουμπιών ημέρας και κουμπί για νέα ημέρα
+    function renderDayButtons() {
+      dayButtonsDiv.innerHTML = '';
 
-        const left = document.createElement('div');
-        left.className = 'spot-name';
-        left.innerHTML = `${spot.type === 'beach' ? '🏖️' : spot.type === 'food' ? '🍽️' : '🚶'} <span>${spot.name}</span>`;
+      Object.keys(spots).forEach(day => {
+        const btn = document.createElement('button');
+        btn.textContent = day;
+        btn.className = day === selectedDay ? 'selected' : '';
+        btn.title = 'Επέλεξε ημέρα ' + day;
 
-        const right = document.createElement('div');
-        right.style.display = 'flex';
-        right.style.alignItems = 'center';
-        right.style.gap = '8px';
-
-        const mapBtn = document.createElement('span');
-        mapBtn.innerText = '📍';
-        mapBtn.style.cursor = 'pointer';
-        mapBtn.onclick = () => {
-          const query = encodeURIComponent(spot.name);
-          window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
-        };
-
-        const clockBtn = document.createElement('span');
-        clockBtn.innerText = '🕒';
-        clockBtn.style.cursor = 'pointer';
-        clockBtn.onclick = () => {
-          showTimeInputIndex = index;
+        btn.onclick = () => {
+          selectedDay = day;
+          renderDayButtons();
           renderSpots();
         };
 
-        right.appendChild(mapBtn);
-        right.appendChild(clockBtn);
-        item.appendChild(left);
-        item.appendChild(right);
-        spotsList.appendChild(item);
+        dayButtonsDiv.appendChild(btn);
+      });
 
-        if (showTimeInputIndex === index) {
-          const timeDiv = document.createElement('div');
-          timeDiv.className = 'time-inputs';
+      // Κουμπί για προσθήκη νέας ημέρας
+      const addDayBtn = document.createElement('button');
+      addDayBtn.textContent = '+ Νέα Ημέρα';
+      addDayBtn.title = 'Προσθήκη νέας ημέρας';
+      addDayBtn.style.backgroundColor = '#28a745';
+      addDayBtn.style.color = 'white';
+      addDayBtn.onclick = () => {
+        newDayNameInput.value = '';
+        addDayModal.classList.add('active');
+        newDayNameInput.focus();
+      };
+      dayButtonsDiv.appendChild(addDayBtn);
+    }
 
-          const startInput = document.createElement('input');
-          startInput.className = 'input';
-          startInput.placeholder = 'Από ώρα';
-          startInput.value = spot.start || '';
-          startInput.oninput = () => {
-            spot.start = startInput.value;
-            saveData();
+    // Εμφάνιση λίστας δραστηριοτήτων
+    function renderSpots() {
+      spotListDiv.innerHTML = '';
+
+      if (!spots[selectedDay] || spots[selectedDay].length === 0) {
+        spotListDiv.textContent = 'Δεν υπάρχουν δραστηριότητες για αυτή την ημέρα.';
+        return;
+      }
+
+      spots[selectedDay].forEach((spot, index) => {
+        const spotDiv = document.createElement('div');
+        spotDiv.className = 'spot';
+
+        const emojiMap = {
+          beach: '🏖️',
+          food: '🍽️',
+          walk: '🚶'
+        };
+        const emoji = emojiMap[spot.type] || '';
+
+        // Κύρια πληροφορία + όνομα + ώρα (αν υπάρχει)
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'spot-info';
+
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'spot-emoji';
+        emojiSpan.textContent = emoji;
+        infoSpan.appendChild(emojiSpan);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'spot-name';
+        nameSpan.textContent = spot.name;
+        nameSpan.title = "Κάνε κλικ για επεξεργασία ονόματος";
+        nameSpan.style.cursor = 'pointer';
+        nameSpan.onclick = () => openRenameModal(index);
+
+        infoSpan.appendChild(nameSpan);
+
+        if (spot.timeFrom || spot.timeTo) {
+          const timeSpan = document.createElement('span');
+          timeSpan.className = 'spot-time';
+          timeSpan.textContent = `${spot.timeFrom || '--:--'} - ${spot.timeTo || '--:--'}`;
+          timeSpan.title = "Κάνε κλικ στο ρολόι για αλλαγή ώρας";
+          timeSpan.style.cursor = 'pointer';
+          timeSpan.onclick = (e) => {
+            e.stopPropagation();
+            openTimeEdit(index);
           };
+          infoSpan.appendChild(timeSpan);
+        }
 
-          const endInput = document.createElement('input');
-          endInput.className = 'input';
-          endInput.placeholder = 'Έως ώρα';
-          endInput.value = spot.end || '';
-          endInput.oninput = () => {
-            spot.end = endInput.value;
-            saveData();
-          };
+        spotDiv.appendChild(infoSpan);
 
-          const okBtn = document.createElement('div');
-          okBtn.style.textAlign = 'right';
-          okBtn.innerHTML = '<span style="color: blue; cursor: pointer;">OK</span>';
-          okBtn.onclick = () => {
-            showTimeInputIndex = null;
-            saveData();
+        // Κουμπιά διαγραφής και ώρας
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'spot-actions';
+
+        // Κουμπί ρολογιού για ώρα
+        const timeBtn = document.createElement('button');
+        timeBtn.title = 'Ρύθμιση ώρας';
+        timeBtn.textContent = '🕒';
+        timeBtn.onclick = (e) => {
+          e.stopPropagation();
+          openTimeEdit(index);
+        };
+        actionsDiv.appendChild(timeBtn);
+
+        // Κουμπί διαγραφής
+        const delBtn = document.createElement('button');
+        delBtn.title = 'Διαγραφή';
+        delBtn.textContent = '❌';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          if(confirm('Να διαγραφεί η δραστηριότητα;')) {
+            spots[selectedDay].splice(index, 1);
+            save();
             renderSpots();
-          };
+          }
+        };
+        actionsDiv.appendChild(delBtn);
 
-          timeDiv.appendChild(startInput);
-          timeDiv.appendChi
+        spotDiv.appendChild(actionsDiv);
+
+        spotListDiv.appendChild(spotDiv);
+      });
+    }
+
+    // Προσθήκη νέας δραστηριότητας
+    addSpotBtn.onclick = () => {
+      const name = spotInput.value.trim();
+      const type = typeSelect.value;
+      if (!name || !type) {
+        alert('Συμπλήρωσε όνομα και τύπο!');
+        return;
+      }
+      spots[selectedDay].push({ name, type, timeFrom: '', timeTo: '' });
+      save();
+      spotInput.value = '';
+      typeSelect.value = '';
+      renderSpots();
+    };
+
+    // Άνοιγμα modal μετονομασίας
+    function openRenameModal(index) {
+      editingSpotIndex = index;
+      renameInput.value = spots[selectedDay][index].name;
+      renameModal.classList.add('active');
+      renameInput.focus();
+      renameInput.select();
+    }
+    renameCancelBtn.onclick = () => {
+      renameModal.classList.remove('active');
+      editingSpotIndex = null;
+    };
+    renameConfirmBtn.onclick = () => {
+      const newName = renameInput.value.trim();
+      if (newName) {
+        spots[selectedDay][editingSpotIndex].name = newName;
+        save();
+        renderSpots();
+      }
+      renameModal.classList.remove('active');
+      editingSpotIndex = null;
+    };
+
+    // Χρήσιμο: κλείσιμο modal με Escape
+    window.addEventListener('keydown', e => {
+      if(e.key === 'Escape') {
+        if(renameModal.classList.contains('active')) {
+          renameModal.classList.remove('active');
+          editingSpotIndex = null;
+        }
+        if(addDayModal.classList.contains('active')) {
+          addDayModal.classList.remove('active');
+        }
+      }
+    });
+
+    // Άνοιγμα modal προσθήκης ημέρας
+    addDayCancelBtn.onclick = () => {
+      addDayModal.classList.remove('active');
+    };
+    addDayConfirmBtn.onclick = () => {
+      let newDay = newDayNameInput.value.trim();
+      if (!newDay) {
+        alert('Πρέπει να γράψεις όνομα για τη νέα ημέρα!');
+        return;
+      }
+      if(spots[newDay]) {
+        alert('Η ημέρα υπάρχει ήδη!');
+        return;
+      }
+      spots[newDay] = [];
+      selectedDay = newDay;
+      save();
+      addDayModal.classList.remove('active');
+      renderDayButtons();
+      renderSpots();
+    };
+
+    // Άνοιγμα επεξεργασίας ώρας (inline)
+    function openTimeEdit(index) {
+      timeEditIndex = index;
+
+      // Δημιουργούμε μια προσωρινή μορφή με δύο inputs για ώρα από-έως
+      const spotDivs = spotListDiv.querySelectorAll('.spot');
+      if(index >= spotDivs.length) return;
+      const spotDiv = spotDivs[index];
+      spotDiv.innerHTML = '';
+
+      const emojiMap = {
+        beach: '🏖️',
+        food: '🍽️',
+        walk: '🚶'
+      };
+      const spot = spots[selectedDay][index];
+
+      // Emoji & type label
+      const emojiSpan = document.createElement('span');
+      emojiSpan.textContent = emojiMap[spot.type] || '';
+      emojiSpan.className = 'spot-emoji';
+
+      // Input όνομα (readonly)
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = spot.name;
+      nameSpan.className = 'spot-name';
+      nameSpan.style.marginLeft = '8px';
+
+      // Inputs για ώρες
+      const timeFromInput = document.createElement('input');
+      timeFromInput.type = 'time';
+      timeFromInput.value = spot.timeFrom || '';
+      timeFromInput.style.marginLeft = '12px';
+
+      const timeToInput = document.createElement('input');
+      timeToInput.type = 'time';
+      timeToInput.value = spot.timeTo || '';
+      timeToInput.style.marginLeft = '6px';
+
+      // Αποθήκευση & Ακύρωση
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = '✔️';
+      saveBtn.title = 'Αποθήκευση ώρας';
+      saveBtn.style.marginLeft = '12px';
+      saveBtn.style.cursor = 'pointer';
+      saveBtn.onclick = () => {
+        spot.timeFrom = timeFromInput.value;
+        spot.timeTo = timeToInput.value;
+        save();
+        renderSpots();
+      };
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = '❌';
+      cancelBtn.title = 'Ακύρωση';
+      cancelBtn.style.marginLeft = '8px';
+      cancelBtn.style.cursor = 'pointer';
+      cancelBtn.onclick = () => {
+        renderSpots();
+      };
+
+      spotDiv.appendChild(emojiSpan);
+      spotDiv.appendChild(nameSpan);
+      spotDiv.appendChild(timeFromInput);
+      spotDiv.appendChild(timeToInput);
+      spotDiv.appendChild(saveBtn);
+      spotDiv.appendChild(cancelBtn);
+    }
+
+    // Αρχική απόδοση
+    renderDayButtons();
+    renderSpots();
+
+  </script>
+
+</body>
+</html>
