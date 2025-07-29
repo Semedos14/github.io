@@ -197,3 +197,257 @@
   </script>
 </body>
 </html>
+
+<script>
+  let spots = JSON.parse(localStorage.getItem('spots')) || {
+    'Day 1': [],
+    'Day 2': [],
+    'Day 3': [],
+    'Day 4': [],
+    'Day 5': []
+  };
+
+  let selectedDay = Object.keys(spots)[0];
+  let selectedType = null;
+  let renameIndex = null;
+  let showTimeInputIndex = null;
+
+  const dayBar = document.getElementById('dayBar');
+  const spotsList = document.getElementById('spotsList');
+  const iconButtons = document.querySelectorAll('.icon-button');
+  const spotNameInput = document.getElementById('spotNameInput');
+  const addSpotButton = document.getElementById('addSpotButton');
+
+  const renameModal = document.getElementById('renameModal');
+  const renameInput = document.getElementById('renameInput');
+  let currentRenameCallback = null;
+
+  const addDayModal = document.getElementById('addDayModal');
+  const newDayInput = document.getElementById('newDayInput');
+
+  const darkToggle = document.getElementById('darkModeToggle');
+  let darkMode = localStorage.getItem('darkMode') === 'true';
+
+  function saveData() {
+    localStorage.setItem('spots', JSON.stringify(spots));
+  }
+
+  function renderDays() {
+    dayBar.innerHTML = '';
+    for (const day in spots) {
+      const btn = document.createElement('div');
+      btn.className = 'day-btn' + (day === selectedDay ? ' selected-day' : '');
+      btn.textContent = day;
+      btn.onclick = () => {
+        selectedDay = day;
+        renderDays();
+        renderSpots();
+      };
+      btn.oncontextmenu = (e) => {
+        e.preventDefault();
+        openRenameModal(day, (newName) => {
+          if (!newName || newName === day || spots[newName]) return;
+          spots[newName] = spots[day];
+          delete spots[day];
+          selectedDay = newName;
+          saveData();
+          renderDays();
+          renderSpots();
+        });
+      };
+      dayBar.appendChild(btn);
+    }
+
+    const addBtn = document.createElement('div');
+    addBtn.className = 'day-btn';
+    addBtn.style.backgroundColor = '#666';
+    addBtn.textContent = '+ Ημέρα';
+    addBtn.onclick = () => {
+      addDayModal.classList.add('active');
+      newDayInput.value = '';
+    };
+    dayBar.appendChild(addBtn);
+  }
+
+  function renderSpots() {
+    spotsList.innerHTML = '';
+    (spots[selectedDay] || []).forEach((spot, index) => {
+      const item = document.createElement('div');
+      item.className = 'spot-item';
+      item.style.backgroundColor = spot.type === 'beach' ? '#d0f0ff' :
+                                   spot.type === 'food' ? '#ffe4b5' :
+                                   spot.type === 'walk' ? '#e6ffe6' : '#eee';
+
+      const left = document.createElement('div');
+      left.className = 'spot-name';
+      left.innerHTML = `${spot.type === 'beach' ? '🏖️' : spot.type === 'food' ? '🍽️' : '🚶'} <span>${spot.name}</span>`;
+
+      const right = document.createElement('div');
+      right.style.display = 'flex';
+      right.style.alignItems = 'center';
+      right.style.gap = '8px';
+
+      const mapBtn = document.createElement('span');
+      mapBtn.innerText = '📍';
+      mapBtn.style.cursor = 'pointer';
+      mapBtn.onclick = () => {
+        const query = encodeURIComponent(spot.name);
+        window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+      };
+
+      const clockBtn = document.createElement('span');
+      clockBtn.innerText = '🕒';
+      clockBtn.style.cursor = 'pointer';
+      clockBtn.onclick = () => {
+        showTimeInputIndex = index;
+        renderSpots();
+      };
+
+      right.appendChild(mapBtn);
+      right.appendChild(clockBtn);
+
+      item.appendChild(left);
+      item.appendChild(right);
+      spotsList.appendChild(item);
+
+      // Time inputs
+      if (showTimeInputIndex === index) {
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'time-inputs';
+
+        const startInput = document.createElement('input');
+        startInput.className = 'input';
+        startInput.placeholder = 'Από ώρα';
+        startInput.value = spot.start || '';
+        startInput.oninput = () => {
+          spot.start = startInput.value;
+          saveData();
+        };
+
+        const endInput = document.createElement('input');
+        endInput.className = 'input';
+        endInput.placeholder = 'Έως ώρα';
+        endInput.value = spot.end || '';
+        endInput.oninput = () => {
+          spot.end = endInput.value;
+          saveData();
+        };
+
+        const okBtn = document.createElement('div');
+        okBtn.style.textAlign = 'right';
+        okBtn.innerHTML = '<span style="color: blue; cursor: pointer;">OK</span>';
+        okBtn.onclick = () => {
+          showTimeInputIndex = null;
+          saveData();
+          renderSpots();
+        };
+
+        timeDiv.appendChild(startInput);
+        timeDiv.appendChild(endInput);
+        timeDiv.appendChild(okBtn);
+        spotsList.appendChild(timeDiv);
+      }
+
+      // Options (rename, delete)
+      const actions = document.createElement('div');
+      actions.className = 'spot-actions';
+
+      const renameBtn = document.createElement('button');
+      renameBtn.textContent = 'Μετονομασία';
+      renameBtn.onclick = () => {
+        openRenameModal(spot.name, (newName) => {
+          if (newName) {
+            spot.name = newName;
+            saveData();
+            renderSpots();
+          }
+        });
+      };
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = 'Διαγραφή';
+      deleteBtn.className = 'delete';
+      deleteBtn.onclick = () => {
+        spots[selectedDay].splice(index, 1);
+        saveData();
+        renderSpots();
+      };
+
+      actions.appendChild(renameBtn);
+      actions.appendChild(deleteBtn);
+      spotsList.appendChild(actions);
+    });
+  }
+
+  function openRenameModal(currentValue, callback) {
+    renameInput.value = currentValue;
+    renameModal.classList.add('active');
+    currentRenameCallback = callback;
+  }
+
+  function closeRenameModal() {
+    renameModal.classList.remove('active');
+    currentRenameCallback = null;
+  }
+
+  function confirmRename() {
+    const val = renameInput.value.trim();
+    if (currentRenameCallback) currentRenameCallback(val);
+    closeRenameModal();
+  }
+
+  function closeAddDayModal() {
+    addDayModal.classList.remove('active');
+  }
+
+  function confirmAddDay() {
+    const newDay = newDayInput.value.trim();
+    if (newDay && !spots[newDay]) {
+      spots[newDay] = [];
+      selectedDay = newDay;
+      saveData();
+      renderDays();
+      renderSpots();
+    }
+    closeAddDayModal();
+  }
+
+  iconButtons.forEach(btn => {
+    btn.onclick = () => {
+      selectedType = btn.dataset.type;
+      iconButtons.forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+  });
+
+  addSpotButton.onclick = () => {
+    const name = spotNameInput.value.trim();
+    if (name && selectedType) {
+      spots[selectedDay].push({ name, type: selectedType });
+      spotNameInput.value = '';
+      selectedType = null;
+      iconButtons.forEach(b => b.classList.remove('selected'));
+      saveData();
+      renderSpots();
+    }
+  };
+
+  darkToggle.onclick = () => {
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark-mode', darkMode);
+    darkToggle.textContent = darkMode ? '☀️' : '🌙';
+    localStorage.setItem('darkMode', darkMode);
+  };
+
+  function init() {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+      darkToggle.textContent = '☀️';
+    }
+    renderDays();
+    renderSpots();
+  }
+
+  init();
+</script>
+
