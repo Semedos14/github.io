@@ -1,355 +1,199 @@
-// Final version with all buttons working, per-item time, long press, renaming popup with Cancel, and full visibility in mobile
-
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  Modal,
-  StyleSheet,
-  ScrollView,
-  Appearance,
-  Linking,
-  KeyboardAvoidingView,
-  Platform
-} from 'react-native';
-
-export default function App() {
-  const [spots, setSpots] = useState({
-    'Day 1': [],
-    'Day 2': [],
-    'Day 3': [],
-    'Day 4': [],
-    'Day 5': []
-  });
-  const [selectedDay, setSelectedDay] = useState('Day 1');
-  const [newSpot, setNewSpot] = useState('');
-  const [selectedType, setSelectedType] = useState(null);
-  const [renameIndex, setRenameIndex] = useState(null);
-  const [renameText, setRenameText] = useState('');
-  const [renameDay, setRenameDay] = useState(null);
-  const [spotOptionsVisible, setSpotOptionsVisible] = useState(null);
-  const [addDayModalVisible, setAddDayModalVisible] = useState(false);
-  const [newDayName, setNewDayName] = useState('');
-  const [darkMode, setDarkMode] = useState(false);
-  const [showTimeInputIndex, setShowTimeInputIndex] = useState(null);
-  const [timeInputs, setTimeInputs] = useState({});
-  const [renameModalVisible, setRenameModalVisible] = useState(false);
-
-  const toggleDarkMode = () => setDarkMode(!darkMode);
-
-  const addSpot = () => {
-    if (newSpot.trim() !== '' && selectedType) {
-      const updatedSpots = [...spots[selectedDay], { name: newSpot, type: selectedType }];
-      setSpots({ ...spots, [selectedDay]: updatedSpots });
-      setNewSpot('');
-      setSelectedType(null);
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>You Have Not Been To Samos!</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background-color: #f5f5f5;
     }
-  };
 
-  const deleteSpot = (index) => {
-    const updated = [...spots[selectedDay]];
-    updated.splice(index, 1);
-    setSpots({ ...spots, [selectedDay]: updated });
-    setSpotOptionsVisible(null);
-  };
-
-  const renameSpot = () => {
-    if (renameIndex !== null && renameText.trim() !== '') {
-      const updated = [...spots[selectedDay]];
-      updated[renameIndex].name = renameText;
-      setSpots({ ...spots, [selectedDay]: updated });
-      setRenameIndex(null);
-      setRenameText('');
-      setRenameModalVisible(false);
+    .title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-  };
 
-  const renameDayFn = () => {
-    if (renameDay && renameText.trim() !== '') {
-      const newSpots = { ...spots };
-      newSpots[renameText] = newSpots[renameDay];
-      delete newSpots[renameDay];
-      setSpots(newSpots);
-      setSelectedDay(renameText);
-      setRenameDay(null);
-      setRenameText('');
+    .title {
+      font-size: 24px;
+      font-weight: bold;
     }
-  };
 
-  const openGoogleMaps = (place) => {
-    const query = encodeURIComponent(place);
-    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
-  };
+    .day-bar {
+      overflow-x: auto;
+      display: flex;
+      gap: 8px;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
 
-  const saveTime = (index) => {
-    setShowTimeInputIndex(null);
-  };
+    .day-btn {
+      background-color: #ccc;
+      padding: 6px 12px;
+      border-radius: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
 
-  const renderSpot = ({ item, index }) => (
-    <View>
-      <TouchableOpacity
-        style={[styles.spotItem, {
-          backgroundColor:
-            item.type === 'beach' ? '#d0f0ff' : item.type === 'food' ? '#ffe4b5' : item.type === 'walk' ? '#e6ffe6' : '#eee'
-        }]}
-        onLongPress={() => setSpotOptionsVisible(index)}
-      >
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ fontSize: 20, marginRight: 8 }}>
-              {item.type === 'beach' ? '🏖️' : item.type === 'food' ? '🍽️' : '🚶'}
-            </Text>
-            <Text style={styles.spotText}>{item.name}</Text>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => openGoogleMaps(item.name)}>
-              <Text style={{ fontSize: 18, marginRight: 8 }}>📍</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowTimeInputIndex(index)}>
-              <Text style={{ fontSize: 16, color: '#666' }}>🕒</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableOpacity>
+    .selected-day {
+      background-color: #00aced;
+      color: white;
+    }
 
-      {showTimeInputIndex === index && (
-        <View style={{ marginTop: 4, paddingHorizontal: 8 }}>
-          <TextInput
-            placeholder="Από ώρα"
-            value={timeInputs[index]?.start || ''}
-            onChangeText={(text) => setTimeInputs({ ...timeInputs, [index]: { ...timeInputs[index], start: text } })}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Έως ώρα"
-            value={timeInputs[index]?.end || ''}
-            onChangeText={(text) => setTimeInputs({ ...timeInputs, [index]: { ...timeInputs[index], end: text } })}
-            style={styles.input}
-          />
-          <TouchableOpacity onPress={() => saveTime(index)}>
-            <Text style={{ color: 'blue', textAlign: 'right', marginTop: 4 }}>OK</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+    .spot-item {
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background-color: #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-      {spotOptionsVisible === index && (
-        <View style={{ marginVertical: 8 }}>
-          <TouchableOpacity onPress={() => deleteSpot(index)} style={{ marginVertical: 8 }}>
-            <Text style={{ color: 'red', textAlign: 'center' }}>Διαγραφή</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => {
-            setRenameIndex(index);
-            setRenameText(item.name);
-            setRenameModalVisible(true);
-          }} style={{ marginVertical: 8 }}>
-            <Text style={{ color: 'blue', textAlign: 'center' }}>Μετονομασία</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
+    .spot-name {
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-  return (
-    <KeyboardAvoidingView style={[styles.container, darkMode && { backgroundColor: '#111' }]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={[styles.title, darkMode && { color: '#fff' }]}>You Have Not Been To Samos!</Text>
-        <TouchableOpacity onPress={toggleDarkMode}>
-          <Text style={{ fontSize: 18 }}>{darkMode ? '☀️' : '🌙'}</Text>
-        </TouchableOpacity>
-      </View>
+    .icon-row {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 8px;
+    }
 
-      <ScrollView horizontal style={{ marginBottom: 4 }}>
-        {Object.keys(spots).map((day) => (
-          <TouchableOpacity
-            key={day}
-            style={[styles.dayBtn, selectedDay === day && styles.selectedDay]}
-            onPress={() => setSelectedDay(day)}
-            onLongPress={() => {
-              setRenameText(day);
-              setRenameDay(day);
-            }}
-          >
-            <Text style={styles.dayText}>{day}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity onPress={() => setAddDayModalVisible(true)} style={[styles.dayBtn, { backgroundColor: '#666' }]}>
-          <Text style={styles.dayText}>+ Ημέρα</Text>
-        </TouchableOpacity>
-      </ScrollView>
+    .icon-button {
+      padding: 10px;
+      border-radius: 8px;
+      background-color: #eee;
+      font-size: 24px;
+      cursor: pointer;
+    }
 
-      <FlatList
-        data={spots[selectedDay]}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={renderSpot}
-        contentContainerStyle={{ paddingBottom: 20, paddingTop: 8 }}
-        inverted={false}
-      />
+    .icon-button.selected {
+      background-color: #a0e1ff;
+    }
 
-      <View style={[styles.addContainer, { marginBottom: 16 }]}>
-              <View style={styles.iconRow}>
-          {['beach', 'food', 'walk'].map((type) => (
-            <TouchableOpacity
-              key={type}
-              onPress={() => setSelectedType(type)}
-              style={[
-                styles.iconButton,
-                selectedType === type && styles.selectedIcon
-              ]}
-            >
-              <Text style={{ fontSize: 24 }}>
-                {type === 'beach' ? '🏖️' : type === 'food' ? '🍽️' : '🚶'}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+    .input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+      margin-bottom: 8px;
+    }
 
-        <TextInput
-          placeholder="Όνομα δραστηριότητας"
-          value={newSpot}
-          onChangeText={setNewSpot}
-          style={styles.input}
-          placeholderTextColor="#888"
-        />
-        <TouchableOpacity onPress={addSpot} style={styles.addButton}>
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Προσθήκη</Text>
-        </TouchableOpacity>
-      </View>
+    .add-button {
+      background-color: #007AFF;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-      {/* Rename Modal */}
-      <Modal visible={renameModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TextInput
-              value={renameText}
-              onChangeText={setRenameText}
-              style={[styles.input, { height: 40, color: '#000' }]}
-              placeholder="Νέο όνομα"
-              placeholderTextColor="#888"
-            />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-              <TouchableOpacity onPress={() => setRenameModalVisible(false)}>
-                <Text style={{ color: 'gray' }}>Ακύρωση</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={renameSpot}>
-                <Text style={{ color: 'blue' }}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+    }
 
-      {/* Add Day Modal */}
-      <Modal visible={addDayModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TextInput
-              placeholder="Όνομα ημέρας"
-              value={newDayName}
-              onChangeText={setNewDayName}
-              style={[styles.input, { height: 40, color: '#000' }]}
-              placeholderTextColor="#888"
-            />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-              <TouchableOpacity onPress={() => setAddDayModalVisible(false)}>
-                <Text style={{ color: 'gray' }}>Ακύρωση</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {
-                if (newDayName.trim()) {
-                  setSpots({ ...spots, [newDayName]: [] });
-                  setSelectedDay(newDayName);
-                  setNewDayName('');
-                  setAddDayModalVisible(false);
-                }
-              }}>
-                <Text style={{ color: 'blue' }}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </KeyboardAvoidingView>
-  );
-}
+    .modal.active {
+      display: flex;
+    }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 40,
-    paddingHorizontal: 16
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold'
-  },
-  dayBtn: {
-    backgroundColor: '#ccc',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    marginHorizontal: 4
-  },
-  selectedDay: {
-    backgroundColor: '#00aced'
-  },
-  dayText: {
-    fontSize: 16
-  },
-  spotItem: {
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 8
-  },
-  spotText: {
-    fontSize: 16
-  },
-  addContainer: {
-    marginTop: 8,
-    padding: 12,
-    borderTopWidth: 1,
-    borderColor: '#ddd',
-    paddingBottom: 20
-  },
-  iconRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 8
-  },
-  iconButton: {
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: '#eee'
-  },
-  selectedIcon: {
-    backgroundColor: '#a0e1ff'
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#aaa',
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 8,
-    color: '#000'
-  },
-  addButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center'
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: '#00000099',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  modalContent: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    width: '80%'
-  }
-});
+    .modal-content {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 400px;
+    }
 
+    .spot-actions {
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .spot-actions button {
+      background: none;
+      border: none;
+      color: blue;
+      margin: 4px;
+      cursor: pointer;
+    }
+
+    .spot-actions .delete {
+      color: red;
+    }
+
+    .time-inputs {
+      margin-top: 4px;
+    }
+
+    .dark-mode {
+      background-color: #111;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title-bar">
+    <div class="title">You Have Not Been To Samos!</div>
+    <button id="darkModeToggle">🌙</button>
+  </div>
+
+  <div class="day-bar" id="dayBar">
+    <!-- Days and Add Day Button will go here -->
+  </div>
+
+  <div id="spotsList">
+    <!-- Spot items will be rendered here -->
+  </div>
+
+  <div class="add-container">
+    <div class="icon-row" id="iconSelector">
+      <div class="icon-button" data-type="beach">🏖️</div>
+      <div class="icon-button" data-type="food">🍽️</div>
+      <div class="icon-button" data-type="walk">🚶</div>
+    </div>
+    <input class="input" id="spotNameInput" placeholder="Όνομα δραστηριότητας" />
+    <div class="add-button" id="addSpotButton">Προσθήκη</div>
+  </div>
+
+  <!-- Rename Modal -->
+  <div class="modal" id="renameModal">
+    <div class="modal-content">
+      <input class="input" id="renameInput" placeholder="Νέο όνομα" />
+      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+        <button onclick="closeRenameModal()">Ακύρωση</button>
+        <button onclick="confirmRename()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Day Modal -->
+  <div class="modal" id="addDayModal">
+    <div class="modal-content">
+      <input class="input" id="newDayInput" placeholder="Όνομα ημέρας" />
+      <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+        <button onclick="closeAddDayModal()">Ακύρωση</button>
+        <button onclick="confirmAddDay()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript functions will be inserted in the next step
+  </script>
+</body>
+</html>
