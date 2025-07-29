@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>You Have Not Been To Samos!</title>
 <style>
+  /* (όλο το ίδιο CSS όπως πριν) */
   body {
     font-family: sans-serif;
     padding: 20px;
@@ -250,7 +251,6 @@
   </div>
 
   <script>
-    // Αρχικοποίηση δεδομένων
     let spots;
     try {
       spots = JSON.parse(localStorage.getItem('spots'));
@@ -267,18 +267,15 @@
     }
 
     let selectedDay = Object.keys(spots)[0];
-    let editingSpotIndex = null;
-    let timeEditIndex = null;
     let darkMode = localStorage.getItem('darkMode') === 'true';
 
     const dayButtonsDiv = document.getElementById('dayButtons');
     const spotListDiv = document.getElementById('spotList');
-    const typeSelect = document.getElementById('typeSelect');
     const spotInput = document.getElementById('spotInput');
+    const typeSelect = document.getElementById('typeSelect');
     const addSpotBtn = document.getElementById('addSpotBtn');
     const darkModeToggle = document.getElementById('darkModeToggle');
 
-    // Modal elements
     const renameModal = document.getElementById('renameModal');
     const renameInput = document.getElementById('renameInput');
     const renameCancelBtn = document.getElementById('renameCancelBtn');
@@ -289,7 +286,9 @@
     const addDayCancelBtn = document.getElementById('addDayCancelBtn');
     const addDayConfirmBtn = document.getElementById('addDayConfirmBtn');
 
-    // Switch dark mode UI
+    let editingSpotIndex = null;
+    let timeEditIndex = null;
+
     function updateDarkModeUI() {
       if (darkMode) {
         document.body.classList.add('dark');
@@ -311,7 +310,6 @@
       localStorage.setItem('spots', JSON.stringify(spots));
     }
 
-    // Δημιουργία κουμπιών ημέρας και κουμπί για νέα ημέρα
     function renderDayButtons() {
       dayButtonsDiv.innerHTML = '';
 
@@ -330,7 +328,6 @@
         dayButtonsDiv.appendChild(btn);
       });
 
-      // Κουμπί για προσθήκη νέας ημέρας
       const addDayBtn = document.createElement('button');
       addDayBtn.textContent = '+ Νέα Ημέρα';
       addDayBtn.title = 'Προσθήκη νέας ημέρας';
@@ -344,7 +341,6 @@
       dayButtonsDiv.appendChild(addDayBtn);
     }
 
-    // Εμφάνιση λίστας δραστηριοτήτων
     function renderSpots() {
       spotListDiv.innerHTML = '';
 
@@ -364,7 +360,6 @@
         };
         const emoji = emojiMap[spot.type] || '';
 
-        // Κύρια πληροφορία + όνομα + ώρα (αν υπάρχει)
         const infoSpan = document.createElement('span');
         infoSpan.className = 'spot-info';
 
@@ -379,7 +374,6 @@
         nameSpan.title = "Κάνε κλικ για επεξεργασία ονόματος";
         nameSpan.style.cursor = 'pointer';
         nameSpan.onclick = () => openRenameModal(index);
-
         infoSpan.appendChild(nameSpan);
 
         if (spot.timeFrom || spot.timeTo) {
@@ -397,11 +391,9 @@
 
         spotDiv.appendChild(infoSpan);
 
-        // Κουμπιά διαγραφής και ώρας
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'spot-actions';
 
-        // Κουμπί ρολογιού για ώρα
         const timeBtn = document.createElement('button');
         timeBtn.title = 'Ρύθμιση ώρας';
         timeBtn.textContent = '🕒';
@@ -411,7 +403,6 @@
         };
         actionsDiv.appendChild(timeBtn);
 
-        // Κουμπί διαγραφής
         const delBtn = document.createElement('button');
         delBtn.title = 'Διαγραφή';
         delBtn.textContent = '❌';
@@ -425,13 +416,24 @@
         };
         actionsDiv.appendChild(delBtn);
 
+        // Νέο κουμπί pin για Google Maps
+        const pinBtn = document.createElement('button');
+        pinBtn.title = 'Άνοιγμα στο Google Maps';
+        pinBtn.textContent = '📍';
+        pinBtn.onclick = (e) => {
+          e.stopPropagation();
+          const query = encodeURIComponent(spot.name);
+          const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
+          window.open(url, '_blank');
+        };
+        actionsDiv.appendChild(pinBtn);
+
         spotDiv.appendChild(actionsDiv);
 
         spotListDiv.appendChild(spotDiv);
       });
     }
 
-    // Προσθήκη νέας δραστηριότητας
     addSpotBtn.onclick = () => {
       const name = spotInput.value.trim();
       const type = typeSelect.value;
@@ -439,6 +441,7 @@
         alert('Συμπλήρωσε όνομα και τύπο!');
         return;
       }
+      if (!spots[selectedDay]) spots[selectedDay] = [];
       spots[selectedDay].push({ name, type, timeFrom: '', timeTo: '' });
       save();
       spotInput.value = '';
@@ -446,7 +449,6 @@
       renderSpots();
     };
 
-    // Άνοιγμα modal μετονομασίας
     function openRenameModal(index) {
       editingSpotIndex = index;
       renameInput.value = spots[selectedDay][index].name;
@@ -469,7 +471,6 @@
       editingSpotIndex = null;
     };
 
-    // Χρήσιμο: κλείσιμο modal με Escape
     window.addEventListener('keydown', e => {
       if(e.key === 'Escape') {
         if(renameModal.classList.contains('active')) {
@@ -482,7 +483,6 @@
       }
     });
 
-    // Άνοιγμα modal προσθήκης ημέρας
     addDayCancelBtn.onclick = () => {
       addDayModal.classList.remove('active');
     };
@@ -504,11 +504,9 @@
       renderSpots();
     };
 
-    // Άνοιγμα επεξεργασίας ώρας (inline)
     function openTimeEdit(index) {
       timeEditIndex = index;
 
-      // Δημιουργούμε μια προσωρινή μορφή με δύο inputs για ώρα από-έως
       const spotDivs = spotListDiv.querySelectorAll('.spot');
       if(index >= spotDivs.length) return;
       const spotDiv = spotDivs[index];
@@ -521,18 +519,15 @@
       };
       const spot = spots[selectedDay][index];
 
-      // Emoji & type label
       const emojiSpan = document.createElement('span');
       emojiSpan.textContent = emojiMap[spot.type] || '';
       emojiSpan.className = 'spot-emoji';
 
-      // Input όνομα (readonly)
       const nameSpan = document.createElement('span');
       nameSpan.textContent = spot.name;
       nameSpan.className = 'spot-name';
       nameSpan.style.marginLeft = '8px';
 
-      // Inputs για ώρες
       const timeFromInput = document.createElement('input');
       timeFromInput.type = 'time';
       timeFromInput.value = spot.timeFrom || '';
@@ -543,7 +538,6 @@
       timeToInput.value = spot.timeTo || '';
       timeToInput.style.marginLeft = '6px';
 
-      // Αποθήκευση & Ακύρωση
       const saveBtn = document.createElement('button');
       saveBtn.textContent = '✔️';
       saveBtn.title = 'Αποθήκευση ώρας';
@@ -573,10 +567,8 @@
       spotDiv.appendChild(cancelBtn);
     }
 
-    // Αρχική απόδοση
     renderDayButtons();
     renderSpots();
-
   </script>
 
 </body>
