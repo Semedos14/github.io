@@ -250,6 +250,22 @@
     </div>
   </div>
 
+  <div id="addContainer" style="margin-top: 8px; padding: 12px; border-top: 1px solid #ddd; padding-bottom: 20px;">
+  <!-- Υπάρχει ήδη το κουμπί "Προσθήκη" εδώ -->
+  <button id="addSpotBtn" style="background-color:#007AFF; color:#fff; padding:10px; border:none; border-radius:8px; font-weight:bold; width:100%; margin-bottom:10px;">
+    Προσθήκη
+  </button>
+
+  <!-- Νέα κουμπιά για Εξαγωγή και Εισαγωγή -->
+  <button id="exportBtn" style="display:block; margin:8px auto 0 auto; padding:10px 20px; background-color:#007AFF; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:16px; width:150px; text-align:center;">
+    Εξαγωγή δεδομένων
+  </button>
+  <button id="importBtn" style="display:block; margin:8px auto 0 auto; padding:10px 20px; background-color:#007AFF; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:16px; width:150px; text-align:center;">
+    Εισαγωγή δεδομένων
+  </button>
+  <input type="file" id="importFile" style="display:none" />
+</div>
+
   <script>
     let spots;
     try {
@@ -569,6 +585,49 @@
 
     renderDayButtons();
     renderSpots();
+
+    // Λειτουργία εξαγωγής δεδομένων
+function exportData() {
+  const dataStr = JSON.stringify(spots, null, 2);
+  const blob = new Blob([dataStr], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'samos_spots_backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Λειτουργία εισαγωγής δεδομένων
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const importedSpots = JSON.parse(e.target.result);
+      if (typeof importedSpots === 'object') {
+        spots = importedSpots;
+        localStorage.setItem('spots', JSON.stringify(spots));
+        renderDayButtons();
+        renderSpots();
+        alert('Τα δεδομένα φορτώθηκαν επιτυχώς!');
+      } else {
+        alert('Άκυρο αρχείο.');
+      }
+    } catch {
+      alert('Σφάλμα κατά την ανάγνωση του αρχείου.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Δέσιμο κουμπιών με λειτουργίες
+document.getElementById('exportBtn').addEventListener('click', exportData);
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', importData);
   </script>
 
 </body>
